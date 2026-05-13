@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IA como Core de Aplicação — Estudo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #7c3aed;
+      --accent2: #06b6d4;
+      --accent3: #10b981;
+      --danger: #f87171;
+      --warn: #fbbf24;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ─── HERO ─────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #0d1117 0%, #1a0533 40%, #001a2c 100%);
+      padding: 80px 24px 60px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(124,58,237,.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-label {
+      display: inline-block;
+      background: rgba(124,58,237,.15);
+      border: 1px solid rgba(124,58,237,.4);
+      color: #a78bfa;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 60px);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, #e6edf3 0%, #a78bfa 50%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 640px;
+      margin: 0 auto 40px;
+    }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 32px;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat .num {
+      font-size: 36px;
+      font-weight: 800;
+      color: #a78bfa;
+      display: block;
+    }
+    .hero-stat .lbl {
+      font-size: 13px;
+      color: var(--muted);
+      max-width: 140px;
+    }
+
+    /* ─── LAYOUT ────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 60px 0; border-bottom: 1px solid var(--border); }
+    .section:last-child { border-bottom: none; }
+    .section-header { margin-bottom: 36px; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 8px;
+    }
+    .section-header h2 {
+      font-size: clamp(24px, 3vw, 34px);
+      font-weight: 700;
+    }
+    .section-header p { color: var(--muted); margin-top: 8px; max-width: 600px; }
+
+    /* ─── CARDS ─────────────────────────────── */
+    .grid { display: grid; gap: 20px; }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color .2s, transform .2s;
+    }
+    .card:hover { border-color: rgba(124,58,237,.5); transform: translateY(-2px); }
+
+    .card-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+    .icon-purple { background: rgba(124,58,237,.15); }
+    .icon-cyan   { background: rgba(6,182,212,.15); }
+    .icon-green  { background: rgba(16,185,129,.15); }
+    .icon-warn   { background: rgba(251,191,36,.15); }
+    .icon-danger { background: rgba(248,113,113,.15); }
+
+    .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .card p  { font-size: 14px; color: var(--muted); }
+
+    /* ─── DECISION TREE ─────────────────────── */
+    .decision-tree {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+    .dt-question {
+      background: linear-gradient(135deg, rgba(124,58,237,.12), rgba(6,182,212,.08));
+      border: 1px solid rgba(124,58,237,.3);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .dt-question span { color: #a78bfa; margin-right: 8px; font-size: 18px; }
+    .dt-answers {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      padding-left: 28px;
+      margin-bottom: 20px;
+    }
+    .dt-yes, .dt-no {
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .dt-yes { background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3); color: #34d399; }
+    .dt-no  { background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.3); color: #f87171; }
+
+    .verdict {
+      display: flex; gap: 16px;
+      border-radius: 10px;
+      padding: 20px 24px;
+      align-items: flex-start;
+    }
+    .verdict.core {
+      background: rgba(16,185,129,.08);
+      border: 1px solid rgba(16,185,129,.25);
+    }
+    .verdict.support {
+      background: rgba(6,182,212,.08);
+      border: 1px solid rgba(6,182,212,.25);
+    }
+    .verdict .icon { font-size: 28px; flex-shrink: 0; }
+    .verdict h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .verdict p  { font-size: 13px; color: var(--muted); }
+    .verdict.core h4 { color: #34d399; }
+    .verdict.support h4 { color: #38bdf8; }
+
+    /* ─── COMPARE TABLE ─────────────────────── */
+    .compare-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .compare-table table { width: 100%; border-collapse: collapse; }
+    .compare-table th, .compare-table td {
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table th {
+      background: var(--surface2);
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .compare-table th:first-child { color: var(--muted); }
+    .compare-table th.col-core { color: #a78bfa; }
+    .compare-table th.col-support { color: #38bdf8; }
+    .compare-table td { color: var(--muted); }
+    .compare-table td:first-child { font-weight: 600; color: var(--text); }
+    .compare-table td.good { color: #34d399; }
+    .compare-table td.warn { color: #fbbf24; }
+    .compare-table td.bad  { color: #f87171; }
+
+    /* ─── RISK CARDS ────────────────────────── */
+    .risk-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--danger);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+    .risk-card.medium { border-left-color: var(--warn); }
+    .risk-card.low    { border-left-color: var(--accent3); }
+    .risk-card .risk-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 10px;
+    }
+    .risk-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 8px; border-radius: 999px;
+    }
+    .badge-high   { background: rgba(248,113,113,.15); color: #f87171; }
+    .badge-medium { background: rgba(251,191,36,.15);  color: #fbbf24; }
+    .badge-low    { background: rgba(16,185,129,.15);  color: #34d399; }
+    .risk-card h3 { font-size: 15px; font-weight: 700; }
+    .risk-card p  { font-size: 13px; color: var(--muted); }
+    .risk-card .mitigation {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--accent3);
+      font-weight: 600;
+    }
+
+    /* ─── CASE STUDY ────────────────────────── */
+    .case-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .case-tag {
+      display: inline-block;
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 10px; border-radius: 999px;
+      background: rgba(124,58,237,.12);
+      border: 1px solid rgba(124,58,237,.3);
+      color: #a78bfa;
+      width: fit-content;
+    }
+    .case-card h3 { font-size: 16px; font-weight: 700; }
+    .case-card p  { font-size: 13px; color: var(--muted); }
+    .case-metric {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600; color: #34d399;
+      padding: 8px 12px;
+      background: rgba(16,185,129,.06);
+      border: 1px solid rgba(16,185,129,.2);
+      border-radius: 8px;
+    }
+
+    /* ─── ARCH DIAGRAM ──────────────────────── */
+    .arch-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      background: var(--surface2);
+    }
+    .arch-box .lbl { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .arch-box .title { font-size: 14px; font-weight: 700; }
+    .arch-arrow {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: var(--muted);
+    }
+    .arch-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .arch-row .arch-box { flex: 1; min-width: 120px; }
+
+    /* ─── PILLARS ───────────────────────────── */
+    .pillar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .pillar::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .pillar.p1::before { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+    .pillar.p2::before { background: linear-gradient(90deg, #0891b2, #38bdf8); }
+    .pillar.p3::before { background: linear-gradient(90deg, #059669, #34d399); }
+    .pillar.p4::before { background: linear-gradient(90deg, #b45309, #fbbf24); }
+    .pillar .num {
+      font-size: 48px; font-weight: 900; opacity: .08;
+      position: absolute; top: 10px; right: 16px;
+      line-height: 1;
+    }
+    .pillar h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .pillar p  { font-size: 13px; color: var(--muted); }
+
+    /* ─── CHECKLIST ─────────────────────────── */
+    .checklist { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 14px;
+    }
+    .checklist li .check {
+      width: 22px; height: 22px; flex-shrink: 0;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .checklist li .check.yes { background: rgba(16,185,129,.15); color: #34d399; }
+    .checklist li .check.no  { background: rgba(248,113,113,.15); color: #f87171; }
+
+    /* ─── FOOTER ────────────────────────────── */
+    .footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .footer a { color: #a78bfa; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* ─── NAV ───────────────────────────────── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,17,23,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; gap: 0;
+      overflow-x: auto;
+    }
+    .nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px; font-weight: 500;
+      padding: 14px 16px;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+    .nav a:hover { color: var(--text); border-bottom-color: var(--accent); }
+
+    /* ─── SOURCES ───────────────────────────── */
+    .sources-grid {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .source-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .source-pill:hover { border-color: rgba(124,58,237,.4); color: #a78bfa; }
+    .source-pill::before { content: '↗'; font-size: 10px; }
+
+    @media (max-width: 640px) {
+      .hero { padding: 56px 16px 40px; }
+      .section { padding: 40px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ──────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#decisao">Decisão</a>
+    <a href="#vantagens">Vantagens</a>
+    <a href="#riscos">Riscos</a>
+    <a href="#arquitetura">Arquitetura</a>
+    <a href="#casos">Casos Reais</a>
+    <a href="#comparativo">Comparativo</a>
+    <a href="#checklist">Checklist</a>
+    <a href="#fontes">Fontes</a>
+  </div>
+</nav>
+
+<!-- ─── HERO ──────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-label">Estudo — Maio 2026</div>
+  <h1>IA como Core<br />de Aplicação</h1>
+  <p>Quando faz sentido, quais as vantagens, os riscos e como decidir com clareza se IA deve ser o núcleo do seu produto.</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <span class="num">6×</span>
+      <span class="lbl">Mais receita por funcionário em startups AI-native</span>
+    </div>
+    <div class="hero-stat">
+      <span class="num">52%</span>
+      <span class="lbl">Dos líderes de TI relatam valor mensurável significativo de IA</span>
+    </div>
+    <div class="hero-stat">
+      <span class="num">3×</span>
+      <span class="lbl">Investimento em IA vertical cresceu em 2025 vs 2024</span>
+    </div>
+    <div class="hero-stat">
+      <span class="num">40%</span>
+      <span class="lbl">Times menores em startups AI-native vs SaaS tradicional</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── QUANDO FAZ SENTIDO ────────────────────────────── -->
+<section class="section" id="decisao">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Framework de Decisão</div>
+      <h2>Quando IA deve ser o Core?</h2>
+      <p>IA como núcleo faz sentido quando o valor principal do produto depende de aprender com dados, tomar decisões complexas ou automatizar o que humanos fariam de forma lenta, cara ou inconsistente.</p>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom: 32px;">
+      <div>
+        <div class="decision-tree">
+          <p style="font-size:14px; color:var(--muted); margin-bottom:20px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Perguntas de diagnóstico</p>
+
+          <div class="dt-question">
+            <span>①</span>Se remover toda a IA, o produto ainda tem sentido?
+          </div>
+          <div class="dt-answers">
+            <div class="dt-yes">✓ Sim → IA é acelerador, não core</div>
+            <div class="dt-no">✗ Não → IA é o core</div>
+          </div>
+
+          <div class="dt-question">
+            <span>②</span>O usuário está comprando um resultado inteligente ou um workflow?
+          </div>
+          <div class="dt-answers">
+            <div class="dt-yes">✓ Resultado (decisão, previsão, interpretação) → IA-core</div>
+            <div class="dt-no">✗ Workflow + UX → IA-suporte</div>
+          </div>
+
+          <div class="dt-question">
+            <span>③</span>Você consegue medir claramente o impacto da IA?
+          </div>
+          <div class="dt-answers">
+            <div class="dt-yes">✓ Sim → ROI claro, vale o investimento</div>
+            <div class="dt-no">✗ Não → risco de overengineering</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="verdict core">
+          <div class="icon">🧠</div>
+          <div>
+            <h4>IA como CORE</h4>
+            <p>O produto não existe sem IA. O diferencial competitivo é a inteligência em si — recomendação, detecção, interpretação, decisão autônoma. Exemplos: sistema de análise de contratos, detecção de fraude em tempo real, copiloto fiscal.</p>
+          </div>
+        </div>
+        <div class="verdict support">
+          <div class="icon">⚙️</div>
+          <div>
+            <h4>IA como SUPORTE</h4>
+            <p>O produto funciona bem sem IA; ela melhora a experiência ou acelera fluxos. Exemplos: autocomplete em campo de busca, geração de relatório, sugestão de texto num formulário.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="card-icon icon-purple">🎯</div>
+        <h3>Decisão complexa com muitas variáveis</h3>
+        <p>Fraude, risco de crédito, precificação dinâmica, recomendação — cenários com incerteza onde regras fixas falham.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-cyan">📄</div>
+        <h3>Entendimento de linguagem e documentos</h3>
+        <p>Leitura de notas fiscais, contratos, e-mails — onde extrair, classificar e interpretar texto é o produto.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">🔍</div>
+        <h3>Padrões impossíveis de codificar</h3>
+        <p>Visão computacional, previsão de demanda, anomalias — problemas onde regras explícitas nunca cobrirão todos os casos.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-purple">👤</div>
+        <h3>Personalização em escala</h3>
+        <p>Experiências adaptadas por usuário, otimização contínua de fluxo — onde um-para-muitos precisa ser tratado como um-para-um.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-cyan">🔄</div>
+        <h3>Repetição volumosa e subjetiva</h3>
+        <p>Classificação de documentos, triagem de erros, sugestão de parâmetros — tarefas que humanos fariam lento, caro e inconsistente.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">📈</div>
+        <h3>Melhoria contínua com dados reais</h3>
+        <p>Sistemas que ficam melhores com o uso, fechando o loop de feedback e reaprendendo com correções dos usuários.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── VANTAGENS ─────────────────────────────────────── -->
+<section class="section" id="vantagens">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Benefícios</div>
+      <h2>Principais Vantagens</h2>
+      <p>Colocar IA no núcleo traz benefícios que vão além de features — cria ativos difíceis de replicar e modelos de negócio radicalmente diferentes.</p>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="pillar p1">
+        <div class="num">1</div>
+        <div class="card-icon icon-purple" style="margin-bottom:12px;">🏆</div>
+        <h3>Vantagem competitiva difícil de copiar</h3>
+        <p>Regras de negócio qualquer concorrente replica com tempo. Um modelo bem treinado com seus dados reais — histórico fiscal, comportamento de clientes, erros comuns — vira um ativo único e proprietário. Treinar o mesmo modelo levaria anos de dados que só você tem.</p>
+      </div>
+      <div class="pillar p2">
+        <div class="num">2</div>
+        <div class="card-icon icon-cyan" style="margin-bottom:12px;">📊</div>
+        <h3>Escala sem crescer custo linearmente</h3>
+        <p>Um time pequeno consegue manter um produto que atende milhares. AI-native startups operam com times <strong style="color:#38bdf8">40% menores</strong> e geram <strong style="color:#38bdf8">$3.48M de receita por funcionário</strong> — 6× mais que SaaS tradicional. A análise e decisão são automatizadas pelo modelo.</p>
+      </div>
+      <div class="pillar p3">
+        <div class="num">3</div>
+        <div class="card-icon icon-green" style="margin-bottom:12px;">🔁</div>
+        <h3>Melhoria contínua com dados reais</h3>
+        <p>Diferente de sistemas baseados em regras, a IA pode ficar melhor com o uso. Cada correção de um analista fiscal vira dado de re-treino. O sistema compõe inteligência ao longo do tempo — cada ciclo começa mais inteligente que o anterior.</p>
+      </div>
+      <div class="pillar p4">
+        <div class="num">4</div>
+        <div class="card-icon icon-warn" style="margin-bottom:12px;">🚀</div>
+        <h3>Novos tipos de produto, não só "features"</h3>
+        <p>Em vez de "mais um módulo de ERP com IA plugada", você cria um produto cujo conceito só existe porque há IA no centro. Um copiloto fiscal que entende NFe, CT-e, PIS/COFINS, legislação e propõe ações — não só mostra dados.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ARQUITETURA ───────────────────────────────────── -->
+<section class="section" id="arquitetura">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Patterns</div>
+      <h2>Padrões Arquiteturais</h2>
+      <p>Aplicações AI-core demandam uma arquitetura diferente da tradicional. Três padrões dominam em 2025.</p>
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom:32px;">
+      <div class="card">
+        <div class="card-icon icon-purple">🤖</div>
+        <h3>Single-Agent</h3>
+        <p style="margin-bottom:12px;">Um modelo com ferramentas definidas e system prompt abrangente. Autonomamente interpreta pedidos, planeja etapas e decide quais ferramentas usar.</p>
+        <p style="font-size:12px; color:#a78bfa; font-weight:600;">Ideal para: tarefas focadas, domínio bem definido</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-cyan">🔗</div>
+        <h3>Multi-Agent</h3>
+        <p style="margin-bottom:12px;">Orquestração de agentes especializados. Decompõe objetivos grandes em sub-tarefas, cada agente com habilidade específica, interação colaborativa ou hierárquica.</p>
+        <p style="font-size:12px; color:#38bdf8; font-weight:600;">Ideal para: pipelines complexos, domínios múltiplos</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">📚</div>
+        <h3>RAG (Retrieval-Augmented Generation)</h3>
+        <p style="margin-bottom:12px;">Aumenta LLMs com um sistema de recuperação que fornece dados de contexto relevantes. O modelo não alucina — busca da base de conhecimento antes de responder.</p>
+        <p style="font-size:12px; color:#34d399; font-weight:600;">Ideal para: domínio específico, dados proprietários</p>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;">
+      <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:20px;">Camadas de uma aplicação AI-core moderna</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="arch-row">
+          <div class="arch-box" style="background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.3);">
+            <div class="lbl">Interface</div>
+            <div class="title" style="color:#a78bfa;">UX / API / Eventos</div>
+          </div>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-row">
+          <div class="arch-box" style="background:rgba(6,182,212,.08);border-color:rgba(6,182,212,.3);">
+            <div class="lbl">Orquestração</div>
+            <div class="title" style="color:#38bdf8;">Prompts · Tools · Guardrails</div>
+          </div>
+          <div style="color:var(--muted);font-size:13px;">↔</div>
+          <div class="arch-box" style="background:rgba(6,182,212,.08);border-color:rgba(6,182,212,.3);">
+            <div class="lbl">Modelo(s)</div>
+            <div class="title" style="color:#38bdf8;">LLM / Vision / ML</div>
+          </div>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-row">
+          <div class="arch-box" style="background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3);">
+            <div class="lbl">Contexto</div>
+            <div class="title" style="color:#34d399;">Vector DB · RAG</div>
+          </div>
+          <div style="color:var(--muted);font-size:13px;">↔</div>
+          <div class="arch-box" style="background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3);">
+            <div class="lbl">Features</div>
+            <div class="title" style="color:#34d399;">Feature Store · Events</div>
+          </div>
+          <div style="color:var(--muted);font-size:13px;">↔</div>
+          <div class="arch-box" style="background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3);">
+            <div class="lbl">Regras</div>
+            <div class="title" style="color:#34d399;">Determinísticas</div>
+          </div>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-row">
+          <div class="arch-box" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.3);">
+            <div class="lbl">Observabilidade</div>
+            <div class="title" style="color:#fbbf24;">Logs · Drift · Feedback Loop</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding:14px 18px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:8px;font-size:13px;color:var(--muted);">
+        <strong style="color:#a78bfa;">Princípio-chave:</strong> Mantenha uma fronteira nítida entre <em>decisão determinística</em> (regras fiscais, validações SEFAZ) e <em>decisão probabilística da IA</em> (sugestões, classificações, previsões). Nunca misture os dois sem visibilidade de qual tomou a decisão.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── RISCOS ────────────────────────────────────────── -->
+<section class="section" id="riscos">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Cuidados</div>
+      <h2>Riscos e Desafios</h2>
+      <p>Colocar IA no core tem custo real. Ignorar esses riscos é a principal causa de projetos AI que viram elefantes brancos.</p>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="risk-card">
+        <div class="risk-header">
+          <span class="risk-badge badge-high">Alto</span>
+          <h3>Dependência de dados bons</h3>
+        </div>
+        <p>Sem dados suficientes, limpos e representativos, o modelo vira "chute bonito". Qualidade de dados é pré-requisito, não detalhe. Apenas 37% das organizações conseguem integração de dados adequada.</p>
+        <div class="mitigation">→ Mitigation: Data Quality Gate antes de qualquer treinamento. Curadoria contínua.</div>
+      </div>
+
+      <div class="risk-card">
+        <div class="risk-header">
+          <span class="risk-badge badge-high">Alto</span>
+          <h3>Explicabilidade e Auditoria</h3>
+        </div>
+        <p>Em domínios regulados (fiscal, saúde, financeiro) você precisa justificar decisões. IA no core exige logs de decisão, trilhas de auditoria e "por que sugeri isso" — não só "o quê".</p>
+        <div class="mitigation">→ Mitigation: Logging de features usadas, confidence scores, explicabilidade por SHAP/LIME.</div>
+      </div>
+
+      <div class="risk-card medium">
+        <div class="risk-header">
+          <span class="risk-badge badge-medium">Médio</span>
+          <h3>Model Drift e Mudança Constante</h3>
+        </div>
+        <p>Modelos, ferramentas e APIs mudam rápido. IA no core implica investir em observabilidade de modelo, monitoramento de drift, re-treino periódico — infraestrutura que nunca para.</p>
+        <div class="mitigation">→ Mitigation: MLOps pipeline, alertas de drift, testes de regressão do modelo.</div>
+      </div>
+
+      <div class="risk-card medium">
+        <div class="risk-header">
+          <span class="risk-badge badge-medium">Médio</span>
+          <h3>Complexidade Arquitetural</h3>
+        </div>
+        <p>Você passa a ter integração entre app, serviços de modelo, feature store, fila de eventos, vector DB. Sem cuidado vira overengineering. 42% dos líderes citam custo de compute como barreira crescente.</p>
+        <div class="mitigation">→ Mitigation: Comece simples (API de modelo externo + regras). Adicione camadas conforme necessidade.</div>
+      </div>
+
+      <div class="risk-card medium">
+        <div class="risk-header">
+          <span class="risk-badge badge-medium">Médio</span>
+          <h3>Governança e Shadow AI</h3>
+        </div>
+        <p>Apenas 1 em 5 empresas tem modelo maduro para governança de agentes autônomos. Shadow AI (uso sem supervisão) introduz riscos sérios de segurança e compliance.</p>
+        <div class="mitigation">→ Mitigation: Política clara de uso de IA, permissões por nível de decisão, revisão humana em ciclos críticos.</div>
+      </div>
+
+      <div class="risk-card low">
+        <div class="risk-header">
+          <span class="risk-badge badge-low">Gerenciável</span>
+          <h3>ROI de Longo Prazo</h3>
+        </div>
+        <p>Apenas 29% das organizações conseguem medir ROI de IA com confiança. Normalmente leva 12-24 meses para ROI claro aparecer. Expectativas irrealistas de curto prazo são comuns.</p>
+        <div class="mitigation">→ Mitigation: Definir métricas de impacto antes de começar. Medir proxies (tempo, acurácia, rejeições) antes do ROI financeiro.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CASOS REAIS ───────────────────────────────────── -->
+<section class="section" id="casos">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Evidências</div>
+      <h2>Casos Reais</h2>
+      <p>Exemplos onde IA é genuinamente o núcleo — não um feature adicionado por cima de um produto existente.</p>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="case-card">
+        <div class="case-tag">Legal Tech</div>
+        <h3>Altumatim — eDiscovery com Gemini</h3>
+        <p>Plataforma que analisa milhões de documentos para eDiscovery jurídico. Sem IA, o produto não existe — é literalmente a IA lendo e classificando os documentos.</p>
+        <div class="case-metric">✓ Acurácia +90% · Processo de meses → horas</div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-tag">Saúde</div>
+        <h3>PathAI — Patologia Assistida</h3>
+        <p>IA que melhora diagnósticos de patologia, ajudando médicos a detectar doenças precocemente. A decisão de risco é do modelo — o médico valida.</p>
+        <div class="case-metric">✓ Tempo de laudo: horas → minutos</div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-tag">Financeiro</div>
+        <h3>Detecção de Fraude em Tempo Real</h3>
+        <p>Sistemas que analisam padrões de transação em tempo real — múltiplas variáveis, contexto histórico, comportamento do usuário. Regras fixas não cobrem 10% dos casos modernos.</p>
+        <div class="case-metric">✓ Falsos positivos reduzidos em 60-80%</div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-tag">Fiscal / NF-e</div>
+        <h3>Copiloto Fiscal (oportunidade)</h3>
+        <p>Sistema que não só valida regras SEFAZ, mas aprende com casos passados de rejeição, erro de preenchimento e glosa. Sugere correções, classifica operações, propõe parâmetros tributários com base no histórico.</p>
+        <div class="case-metric">✓ Redução de rejeições · Triagem automática de erros</div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-tag">Startups AI-native</div>
+        <h3>Desempenho vs SaaS Tradicional</h3>
+        <p>Startups com IA como core atingem escala radicalmente diferente: menos pessoas, mais receita por funcionário, e chegam ao status de unicórnio um ano mais cedo que pares não-AI.</p>
+        <div class="case-metric">✓ $3.48M receita/funcionário · 6× vs SaaS</div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-tag">Vertical AI</div>
+        <h3>Boom de Investimento em IA Vertical</h3>
+        <p>Soluções AI verticais (foco em um setor específico com dados proprietários) captaram $3.5B em 2025 — quase 3× o investimento de 2024. O mercado está apostando em AI-core por setor.</p>
+        <div class="case-metric">✓ $3.5B captados · 10 produtos com +$1B ARR</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── COMPARATIVO ───────────────────────────────────── -->
+<section class="section" id="comparativo">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Análise</div>
+      <h2>AI-Core vs AI-Suporte</h2>
+      <p>A distinção não é técnica — é estratégica. Define onde fica o risco, a compliance, a escala e o valor do produto.</p>
+    </div>
+
+    <div class="compare-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Dimensão</th>
+            <th class="col-core">🧠 AI como Core</th>
+            <th class="col-support">⚙️ AI como Suporte</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Produto sem IA</td>
+            <td class="bad">Não faz sentido</td>
+            <td class="good">Funciona bem</td>
+          </tr>
+          <tr>
+            <td>Principal entrega</td>
+            <td>Decisão, previsão, interpretação</td>
+            <td>Workflow, integração, UX</td>
+          </tr>
+          <tr>
+            <td>Vantagem competitiva</td>
+            <td class="good">Alta — ativo proprietário</td>
+            <td class="warn">Média — replicável</td>
+          </tr>
+          <tr>
+            <td>Risco regulatório</td>
+            <td class="bad">Alto — High-Risk AI Act</td>
+            <td class="good">Baixo — Limited Risk</td>
+          </tr>
+          <tr>
+            <td>Escala de time</td>
+            <td class="good">Sublinear — cresce pouco</td>
+            <td class="warn">Linear — time cresce junto</td>
+          </tr>
+          <tr>
+            <td>Complexidade técnica</td>
+            <td class="bad">Alta — MLOps, drift, treino</td>
+            <td class="good">Baixa — API call</td>
+          </tr>
+          <tr>
+            <td>Explicabilidade necessária</td>
+            <td class="bad">Mandatória em domínios regulados</td>
+            <td class="good">Opcional</td>
+          </tr>
+          <tr>
+            <td>Feedback loop</td>
+            <td class="good">Melhora contínua com dados</td>
+            <td class="warn">Limitado ao modelo base</td>
+          </tr>
+          <tr>
+            <td>Time to ROI</td>
+            <td class="warn">12-24 meses</td>
+            <td class="good">3-6 meses</td>
+          </tr>
+          <tr>
+            <td>Barreira de entrada</td>
+            <td class="good">Alta para concorrentes</td>
+            <td class="bad">Baixa — qualquer um replica</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CHECKLIST ────────────────────────────────────── -->
+<section class="section" id="checklist">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Guia Prático</div>
+      <h2>Checklist de Decisão</h2>
+      <p>Use este checklist antes de decidir se IA entra como core. Mais respostas "sim" = mais sentido ter IA no núcleo.</p>
+    </div>
+
+    <div class="grid grid-2">
+      <div>
+        <p style="font-size:13px;font-weight:700;color:var(--accent3);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">✓ Sinais que apontam para IA-Core</p>
+        <ul class="checklist">
+          <li>
+            <div class="check yes">✓</div>
+            <div>Sem IA, o produto perde o sentido ou valor principal?</div>
+          </li>
+          <li>
+            <div class="check yes">✓</div>
+            <div>O usuário está comprando uma decisão ou interpretação inteligente?</div>
+          </li>
+          <li>
+            <div class="check yes">✓</div>
+            <div>Você tem (ou pode construir) dados proprietários relevantes para treinar?</div>
+          </li>
+          <li>
+            <div class="check yes">✓</div>
+            <div>Há volume suficiente de tarefas repetitivas que humanos fazem hoje?</div>
+          </li>
+          <li>
+            <div class="check yes">✓</div>
+            <div>O impacto da IA é mensurável (tempo, acurácia, rejeições, produtividade)?</div>
+          </li>
+          <li>
+            <div class="check yes">✓</div>
+            <div>Você consegue fechar o loop de feedback (correções voltam como treino)?</div>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <p style="font-size:13px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">✗ Sinais de alerta</p>
+        <ul class="checklist">
+          <li>
+            <div class="check no">✗</div>
+            <div>Você ainda não tem dados limpos e representativos do domínio?</div>
+          </li>
+          <li>
+            <div class="check no">✗</div>
+            <div>O produto funciona bem como CRUD + regras, e IA seria "cosmética"?</div>
+          </li>
+          <li>
+            <div class="check no">✗</div>
+            <div>Não há plano de observabilidade de modelo, re-treino ou drift monitoring?</div>
+          </li>
+          <li>
+            <div class="check no">✗</div>
+            <div>O domínio exige auditoria, mas você não tem trilha de decisão da IA?</div>
+          </li>
+          <li>
+            <div class="check no">✗</div>
+            <div>A equipe espera ROI em menos de 6 meses sem métricas intermediárias?</div>
+          </li>
+          <li>
+            <div class="check no">✗</div>
+            <div>A complexidade arquitetural adicionada supera o valor entregue pelo modelo?</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;background:var(--surface);border:1px solid rgba(124,58,237,.3);border-radius:var(--radius);padding:28px;">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;color:#a78bfa;">Regra de ouro</h3>
+      <p style="color:var(--muted);line-height:1.7;">
+        Mesmo com IA no core, mantenha sempre: <strong style="color:var(--text)">(1) modelo de domínio claro</strong> — entidades, estados, fluxos;
+        <strong style="color:var(--text)">(2) regras determinísticas bem definidas</strong> para o que é exato e legislado;
+        <strong style="color:var(--text)">(3) fronteira nítida</strong> entre decisão determinística e decisão probabilística da IA.
+        Misturar os dois sem visibilidade é a receita para sistemas que ninguém confia e ninguém consegue auditar.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FONTES ────────────────────────────────────────── -->
+<section class="section" id="fontes">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Referências</div>
+      <h2>Fontes da Pesquisa</h2>
+      <p>Fontes consultadas para construção deste estudo.</p>
+    </div>
+    <div class="sources-grid">
+      <a class="source-pill" href="https://a16z.com/nine-emerging-developer-patterns-for-the-ai-era/" target="_blank">a16z — Developer Patterns AI Era</a>
+      <a class="source-pill" href="https://sealos.io/blog/the-architecture-of-a-modern-ai-application-a-2025-blueprint" target="_blank">Sealos — Modern AI App Architecture 2025</a>
+      <a class="source-pill" href="https://medium.com/codex/10-software-architecture-patterns-reshaping-ai-integrated-enterprise-systems-in-2025-cc589ebe8313" target="_blank">Medium — 10 Architecture Patterns 2025</a>
+      <a class="source-pill" href="https://paelladoc.com/blog/stop-guessing-5-ai-architecture-patterns/" target="_blank">PAELLADOC — 5 AI Architecture Patterns</a>
+      <a class="source-pill" href="https://docs.cloud.google.com/architecture/choose-design-pattern-agentic-ai-system" target="_blank">Google Cloud — Agentic AI Design Patterns</a>
+      <a class="source-pill" href="https://medium.com/@angmillward/the-ai-product-conundrum-distinguishing-ai-first-strategy-from-ai-enabled-augmentation-281fbebdd433" target="_blank">Medium — AI-First vs AI-Enabled</a>
+      <a class="source-pill" href="https://jetsoftpro.com/blog/ai-product-strategy-2026" target="_blank">JetSoftPro — AI Product Strategy 2026</a>
+      <a class="source-pill" href="https://www.solutelabs.com/blog/ai-a-product-vs-feature" target="_blank">SoluteLabs — AI Product vs Feature</a>
+      <a class="source-pill" href="https://www.cloudera.com/blog/business/enterprise-ai-and-data-architecture-in-2025-from-experimentation-to-integration.html" target="_blank">Cloudera — Enterprise AI Architecture 2025</a>
+      <a class="source-pill" href="https://www.cio.com/article/4164505/designing-the-ai-native-cloud-what-enterprise-architects-are-learning-the-hard-way.html" target="_blank">CIO — AI-Native Cloud Design</a>
+      <a class="source-pill" href="https://online.hbs.edu/blog/post/ai-native" target="_blank">HBS — How to Architect AI-Native Business</a>
+      <a class="source-pill" href="https://www.deloitte.com/us/en/insights/topics/technology-management/tech-trends/2026/ai-future-it-function.html" target="_blank">Deloitte — AI-Native IT Organization 2026</a>
+      <a class="source-pill" href="https://www.biz4group.com/blog/innovative-ai-case-studies" target="_blank">Biz4Group — AI Startup Case Studies 2026</a>
+      <a class="source-pill" href="https://menlovc.com/perspective/2025-the-state-of-generative-ai-in-the-enterprise/" target="_blank">Menlo Ventures — State of GenAI Enterprise 2025</a>
+      <a class="source-pill" href="https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/a-framework-for-calculating-roi-for-agentic-ai-apps/4369169" target="_blank">Microsoft — ROI Framework Agentic AI</a>
+      <a class="source-pill" href="https://irisagent.com/blog/the-power-of-feedback-loops-in-ai-learning-from-mistakes/" target="_blank">IrisAgent — Feedback Loops in AI</a>
+      <a class="source-pill" href="https://keylabs.ai/blog/establishing-continuous-feedback-loops-iteratively-improving-your-training-data/" target="_blank">Keylabs — Continuous Feedback Loops</a>
+      <a class="source-pill" href="https://amycmitchell.substack.com/p/ai-first-product-management" target="_blank">Amy Mitchell — AI-First vs AI Theater</a>
+      <a class="source-pill" href="https://blog.logrocket.com/product-management/automation-vs-ai-decision-framework" target="_blank">LogRocket — Automation vs AI Framework</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────── -->
+<footer class="footer">
+  <p>Estudo produzido em <strong>maio de 2026</strong> com suporte de pesquisa assistida por IA.</p>
+  <p style="margin-top:6px;font-size:12px;">Fontes incluem <a href="https://a16z.com" target="_blank">a16z</a>, <a href="https://www.deloitte.com" target="_blank">Deloitte</a>, <a href="https://menlovc.com" target="_blank">Menlo Ventures</a>, <a href="https://www.cloudera.com" target="_blank">Cloudera</a>, Microsoft e outras referências de 2024–2026.</p>
+</footer>
+
+</body>
+</html>
